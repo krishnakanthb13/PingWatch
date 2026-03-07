@@ -36,7 +36,8 @@ set "INTERVAL=600"         :: Time between checks (in seconds)
 2. **Configure**: (Optional) Edit the `TARGET` variable in the file if you want to ping something other than Google.
 3. **Launch**: Double-click `PingWatch.bat`.
 4. **Monitor**: The console will show the status, and a `PingWatch.log` file will be created/updated in the same folder.
-5. **Stop**: To stop the process, press **Ctrl+C** in the terminal window and confirm (if prompted), or simply close the window.
+5. **On-Demand**: Press any key (except `Ctrl+C`) while the window is focused to trigger a ping immediately, bypassing the wait interval.
+6. **Stop**: To stop the process, press **Ctrl+C** in the terminal window and confirm (if prompted), or simply close the window.
 
 ---
 
@@ -45,7 +46,7 @@ set "INTERVAL=600"         :: Time between checks (in seconds)
 ### The Loop Logic
 The script operates in a continuous cycle:
 
-1. **Timestamping**: Uses native `%DATE%` and `%TIME%` variables, parsed for clean `[DD/MM/YYYY HH:MM]` formatting.
+1. **Timestamping**: Uses native `%DATE%` and `%TIME%` variables, parsed for precise `[DD/MM/YYYY HH:MM:SS]` formatting with leading-zero correction for AM hours.
 2. **Ping Execution**: 
    - `ping -n %PACKETS%`: Sends exactly the number of packets specified (default 1).
    - `-w 2000`: Waits 2 seconds for a response before timing out.
@@ -72,9 +73,9 @@ The script operates in a continuous cycle:
 Entries in `PingWatch.log` are designed to be easily grep-able or imported into Excel:
 
 ```text
-[07/03/2026 13:45] SUCCESS - google.com is reachable
-[07/03/2026 13:55] SUCCESS - google.com is reachable
-[07/03/2026 14:05] FAILURE - google.com is NOT reachable
+[07/03/2026 13:45:12] SUCCESS - google.com is reachable
+[07/03/2026 13:55:04] SUCCESS - google.com is reachable
+[07/03/2026 14:05:59] FAILURE - google.com is NOT reachable
 ```
 
 ---
