@@ -1,125 +1,94 @@
 # PingWatch - Lightweight Network Monitor
 
-A minimal Windows batch script that pings a target host every 10 minutes
-and logs success or failure to a plain text file in the same directory.
-
-Designed for low-resource environments (e.g. mobile hotspot / USB tethering).
+A hyper-minimalist Windows batch script designed for monitoring network stability. **PingWatch** is optimized for low-resource environments (like mobile hotspots or metered USB tethering), using native Windows commands to log connectivity without the overhead of modern monitoring suites.
 
 ---
 
-## Files
+## 🛠️ Features
 
-| File               | Purpose                                      |
-|--------------------|----------------------------------------------|
-| PingWatch.bat      | Main script - run this                       |
-| PingWatch_log.txt  | Auto-created log file (same folder as .bat)  |
-
----
-
-## How to Use
-
-1. Place `PingWatch.bat` in any folder you like.
-2. Double-click it (or right-click → Run as Administrator if needed).
-3. When prompted, type a website or IP address, e.g.:
-       google.com
-       8.8.8.8
-       192.168.1.1
-4. Press Enter. The script starts monitoring immediately.
-5. Results print on screen AND are saved to `PingWatch_log.txt`.
-6. To stop: press **Ctrl+C** in the window, then close it.
+- **Zero Dependencies**: No Python, Node.js, or external executables required.
+- **Set-and-Forget**: Configure your target host once and let it run in the background.
+- **Resource Efficient**: Consumes ~1-3MB of RAM and effectively 0% CPU while idling.
+- **Metered Connection Friendly**: Minimizes data usage by sending single ICMP packets at long intervals.
+- **Self-Contained**: Automatically creates logic-based logs in its own directory.
 
 ---
 
-## Log File Format
+## ⚙️ Configuration
 
-Each line in `PingWatch_log.txt` looks like:
+The script is non-interactive for speed and reliability. To change where it pings or how often, right-click `PingWatch.bat` → **Edit** and modify the `Settings` block at the top:
 
-    [DD/MM/YYYY HH:MM] SUCCESS - google.com is reachable
-    [DD/MM/YYYY HH:MM] FAILURE - google.com is NOT reachable
-
-The log file grows over time. You can open it any time in Notepad.
-To clear it, simply delete the file — it will be recreated on the next run.
-
----
-
-## Code Documentation
-
-### `setlocal`
-Keeps all variables scoped to this script only.
-Prevents pollution of the system environment. Clean and safe.
-
-### `set "LOG=%~dp0PingWatch_log.txt"`
-`%~dp0` = the folder where the .bat file lives (drive + path).
-This means the log always saves next to the script, regardless of where
-you place it. No hardcoded paths needed.
-
-### `set /p TARGET=...`
-Prompts the user to type the address interactively.
-No GUI needed — keeps the script lean.
-
-### `ping -n 1 -w 2000 %TARGET% >nul 2>&1`
-- `-n 1`     → Send only 1 ping packet (minimum needed to test connectivity)
-- `-w 2000`  → Wait up to 2 seconds for a reply (2000ms timeout)
-- `>nul`     → Suppress standard output (we only care about exit code)
-- `2>&1`     → Also suppress error output
-Why: 1 packet is enough to confirm reachability. Less traffic = better
-for metered/mobile connections. Suppressing output saves CPU cycles
-from rendering text we don't need.
-
-### `if %ERRORLEVEL%==0`
-ping.exe returns exit code 0 on success, non-zero on failure.
-This is the most reliable and CPU-cheap way to check the result —
-no string parsing, no extra tools.
-
-### `>> "%LOG%"`
-Double `>>` appends to the file instead of overwriting it.
-Quotes around the path handle spaces in folder names safely.
-
-### `timeout /t 600 /nobreak >nul`
-- `timeout`    → Built-in Windows command, no extra processes spawned
-- `/t 600`     → Wait 600 seconds (10 minutes)
-- `/nobreak`   → Prevents accidental skipping by pressing a key
-- `>nul`       → Suppresses the countdown display (saves tiny CPU cycles)
-Why timeout over ping sleep or ping -n X: `timeout` is a native,
-single-purpose idle command. It sleeps the process entirely —
-virtually zero CPU and RAM use during the wait period.
-
-### `goto LOOP`
-Simple infinite loop back to the top. No scheduled tasks, no services,
-no background agents. The script itself IS the scheduler. This keeps
-it self-contained and easy to kill.
+```batch
+:: ============================================================
+:: Settings
+:: ============================================================
+set "TARGET=google.com"    :: The website or IP address to monitor
+set "PACKETS=1"           :: Number of pings to send per check
+set "INTERVAL=600"         :: Time between checks (in seconds)
+:: ============================================================
+```
 
 ---
 
-## Resource Usage
+## 🚀 How to Use
 
-| Resource | Usage                              |
-|----------|------------------------------------|
-| CPU      | Near-zero (idle 99.8% of the time) |
-| RAM      | ~1-3 MB (cmd.exe overhead only)    |
-| Network  | 1 ICMP packet per 10 minutes       |
-| Disk     | Appends ~50 bytes per entry        |
-
-This script is intentionally minimal. It does one thing, does it well,
-and gets out of the way.
+1. **Setup**: Place `PingWatch.bat` in a folder of your choice.
+2. **Configure**: (Optional) Edit the `TARGET` variable in the file if you want to ping something other than Google.
+3. **Launch**: Double-click `PingWatch.bat`.
+4. **Monitor**: The console will show the status, and a `PingWatch_log.txt` file will be created/updated in the same folder.
+5. **Stop**: To stop the process, press **Ctrl+C** in the terminal window and confirm (if prompted), or simply close the window.
 
 ---
 
-## Tips
+## 🔍 Technical Deep Dive
 
-- Run it in the background by minimising the window — it won't slow
-  your PC down.
-- To change the interval, edit the `timeout /t 600` line.
-  Example: `/t 300` = every 5 minutes, `/t 1800` = every 30 minutes.
-- You can run multiple instances simultaneously for different targets —
-  each will create its own log if placed in different folders.
-- On Windows 11, if Defender flags it, right-click → Properties →
-  Unblock, then run again.
+### The Loop Logic
+The script operates in a continuous cycle:
+
+1. **Timestamping**: Uses native `%DATE%` and `%TIME%` variables, parsed for clean `[DD/MM/YYYY HH:MM]` formatting.
+2. **Ping Execution**: 
+   - `ping -n %PACKETS%`: Sends exactly the number of packets specified (default 1).
+   - `-w 2000`: Waits 2 seconds for a response before timing out.
+   - `>nul 2>&1`: Suppresses all command output to keep the console clean and save CPU cycles.
+3. **Conditionals**: Checks `%ERRORLEVEL%`. If `0`, the host is reachable; otherwise, a failure is logged.
+4. **Appending**: Uses `>>` to append logs. This ensures you never lose history unless you manually delete the log file.
+5. **Native Sleep**: Uses the `timeout` command which puts the process into an idle state, requiring nearly zero system interrupts.
 
 ---
 
-## Requirements
+## 📊 Performance & Resource Usage
 
-- Windows 7 / 8 / 10 / 11 (any edition)
-- No admin rights required in most cases
-- No installs, no dependencies
+| Resource | Usage                              | Why? |
+|----------|------------------------------------|------|
+| **CPU**  | < 0.1%                             | Spends 99.8% of time in `timeout` (idle state). |
+| **RAM**  | ~1.5 MB                            | Only the overhead of a standard `cmd.exe` process. |
+| **Network**| ~32 Bytes / 10 Mins               | Standard ICMP Echo Request. |
+| **Disk** | ~50 Bytes / Entry                  | Efficient plain-text appending. |
+
+---
+
+## 📋 Log File Format
+
+Entries in `PingWatch_log.txt` are designed to be easily grep-able or imported into Excel:
+
+```text
+[07/03/2026 13:45] SUCCESS - google.com is reachable
+[07/03/2026 13:55] SUCCESS - google.com is reachable
+[07/03/2026 14:05] FAILURE - google.com is NOT reachable
+```
+
+---
+
+## 💡 Pro Tips
+
+- **Minimize to Tray**: Run the script and then minimize the window; it will continue logging without cluttering your taskbar.
+- **Multiple Targets**: Copy the script to different folders and change the `TARGET` in each one. They will each maintain their own separate log files.
+- **Startup**: Create a shortcut to the `.bat` file in your Windows Startup folder (`shell:startup`) to begin monitoring automatically when you log in.
+
+---
+
+## 💻 Requirements
+
+- **OS**: Windows 7 / 8 / 10 / 11.
+- **Rights**: Standard user permissions (Administrator not required).
+- **Disk**: Minimal space for text logs.
