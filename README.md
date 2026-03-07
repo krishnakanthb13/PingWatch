@@ -19,12 +19,20 @@ A hyper-minimalist network monitor for **Windows (Batch)** and **Linux/macOS (Ba
 
 Both scripts contain a `Settings` block at the top. Open `PingWatch.bat` (Windows) or `PingWatch.sh` (Linux/macOS) in any text editor to edit:
 
+### Windows (`.bat` Syntax)
+```batch
+set "TARGET=google.com"      :: The website or IP address to monitor
+set "PACKETS=1"              :: Number of pings to send per check
+set "INTERVAL=600"           :: Time between checks (in seconds)
+set "LOG=%~dp0PingWatch.log" :: Output log filename
+```
+
+### Linux / macOS (`.sh` Syntax)
 ```bash
-# Windows (Batch) / Linux (Bash) settings look similar:
-TARGET="google.com"    # The website or IP address to monitor
-PACKETS=1              # Number of pings to send per check
-INTERVAL=600           # Time between checks (in seconds)
-LOG="PingWatch.log"    # Output log filename
+TARGET="google.com"            # The website or IP address to monitor
+PACKETS=1                      # Number of pings to send per check
+INTERVAL=600                   # Time between checks (in seconds)
+LOG="PingWatch.log"            # Output log filename
 ```
 
 ---
