@@ -6,10 +6,10 @@
 :: Settings
 :: ============================================================
 setlocal
-set "TARGET=google.com"
-set "PACKETS=1"
-set "INTERVAL=600"
-set "LOG=%~dp0PingWatch.log"
+set "TARGET=8.8.8.8"           :: Google Public DNS (Google.com)
+set "PACKETS=1"                :: Number of pings to send per check
+set "INTERVAL=600"             :: Ping interval in seconds
+set "LOG=%~dp0PingWatch.log"   :: Output log filename
 :: ============================================================
 
 echo.

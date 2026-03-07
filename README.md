@@ -21,7 +21,7 @@ Both scripts contain a `Settings` block at the top. Open `PingWatch.bat` (Window
 
 ### Windows (`.bat` Syntax)
 ```batch
-set "TARGET=google.com"      :: The website or IP address to monitor
+set "TARGET=8.8.8.8"         :: Google Public DNS (Google.com)
 set "PACKETS=1"              :: Number of pings to send per check
 set "INTERVAL=600"           :: Time between checks (in seconds)
 set "LOG=%~dp0PingWatch.log" :: Output log filename
@@ -29,7 +29,7 @@ set "LOG=%~dp0PingWatch.log" :: Output log filename
 
 ### Linux / macOS (`.sh` Syntax)
 ```bash
-TARGET="google.com"            # The website or IP address to monitor
+TARGET="8.8.8.8"               # Google Public DNS (Google.com)
 PACKETS=1                      # Number of pings to send per check
 INTERVAL=600                   # Time between checks (in seconds)
 LOG="PingWatch.log"            # Output log filename

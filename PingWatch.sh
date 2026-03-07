@@ -5,9 +5,9 @@
 # ============================================================
 # Settings
 # ============================================================
-TARGET="google.com"
-PACKETS=1
-INTERVAL=600
+TARGET="8.8.8.8"               # Google Public DNS (Google.com)
+PACKETS=1                      # Number of pings to send per check
+INTERVAL=600                   # Ping interval in seconds
 # Get current directory of the script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG="$SCRIPT_DIR/PingWatch.log"
