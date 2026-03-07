@@ -1,59 +1,71 @@
 # PingWatch - Lightweight Network Monitor
 
-A hyper-minimalist Windows batch script designed for monitoring network stability. **PingWatch** is optimized for low-resource environments (like mobile hotspots or metered USB tethering), using native Windows commands to log connectivity without the overhead of modern monitoring suites.
+A hyper-minimalist network monitor for **Windows (Batch)** and **Linux/macOS (Bash)**. **PingWatch** is optimized for low-resource environments (like mobile hotspots or metered USB tethering), using native system commands to log connectivity without extra dependencies.
 
 ---
 
 ## 🛠️ Features
 
-- **Zero Dependencies**: No Python, Node.js, or external executables required.
-- **Set-and-Forget**: Configure your target host once and let it run in the background.
-- **Resource Efficient**: Consumes ~1-3MB of RAM and effectively 0% CPU while idling.
-- **Metered Connection Friendly**: Minimizes data usage by sending single ICMP packets at long intervals.
-- **Self-Contained**: Automatically creates logic-based logs in its own directory.
+- **Cross-Platform**: Full support for Windows (`.bat`) and Unix-like systems (`.sh`).
+- **Zero Dependencies**: No Python, Node.js, or external tools required—just native shell magic.
+- **Set-and-Forget**: Configure your target once and let it run in the background.
+- **Resource Efficient**: Consumes ~1.5MB of RAM and effectively 0% CPU while idling.
+- **On-Demand Checking**: Press any key while the window is focused to trigger a ping immediately.
+- **Precision Logging**: Precise timestamps `[DD/MM/YYYY HH:MM:SS]` for every entry.
 
 ---
 
 ## ⚙️ Configuration
 
-The script is non-interactive for speed and reliability. To change where it pings or how often, right-click `PingWatch.bat` → **Edit** and modify the `Settings` block at the top:
+Both scripts contain a `Settings` block at the top. Open `PingWatch.bat` (Windows) or `PingWatch.sh` (Linux/macOS) in any text editor to edit:
 
-```batch
-:: ============================================================
-:: Settings
-:: ============================================================
-set "TARGET=google.com"    :: The website or IP address to monitor
-set "PACKETS=1"           :: Number of pings to send per check
-set "INTERVAL=600"         :: Time between checks (in seconds)
-:: ============================================================
+```bash
+# Windows (Batch) / Linux (Bash) settings look similar:
+TARGET="google.com"    # The website or IP address to monitor
+PACKETS=1              # Number of pings to send per check
+INTERVAL=600           # Time between checks (in seconds)
+LOG="PingWatch.log"    # Output log filename
 ```
 
 ---
 
 ## 🚀 How to Use
 
-1. **Setup**: Place `PingWatch.bat` in a folder of your choice.
-2. **Configure**: (Optional) Edit the `TARGET` variable in the file if you want to ping something other than Google.
-3. **Launch**: Double-click `PingWatch.bat`.
-4. **Monitor**: The console will show the status, and a `PingWatch.log` file will be created/updated in the same folder.
-5. **On-Demand**: Press any key (except `Ctrl+C`) while the window is focused to trigger a ping immediately, bypassing the wait interval.
-6. **Stop**: To stop the process, press **Ctrl+C** in the terminal window and confirm (if prompted), or simply close the window.
+### Windows
+1. **Launch**: Double-click `PingWatch.bat`.
+2. **Monitor**: The console will show status, and a `PingWatch.log` file is updated in the same folder.
+3. **On-Demand**: Press any key to trigger a ping immediately.
+4. **Stop**: Press **Ctrl+C** or close the window.
+
+### Linux / macOS
+1. **Permissions**: Make the script executable: `chmod +x PingWatch.sh`
+2. **Launch**: Run it from the terminal: `./PingWatch.sh`
+3. **Monitor**: Status is printed and appended to `PingWatch.log`.
+4. **On-Demand**: Press any key to trigger an instant ping.
+5. **Stop**: Press **Ctrl+C**.
 
 ---
 
-## 🔍 Technical Deep Dive
+## 🔍 Detailed Code Documentation
 
-### The Loop Logic
-The script operates in a continuous cycle:
+### The Logging Engine
+#### Windows (`.bat`)
+- `set "LOG=%~dp0PingWatch.log"`: Uses `%~dp0` to ensure the log is always created in the script's own folder, even if run from a different directory.
+- `for /f "tokens=..." %%a in ("%TIME%")`: Parses the system time into tokens to force a leading `0` for hours before 10 AM, ensuring fixed-width log entries.
 
-1. **Timestamping**: Uses native `%DATE%` and `%TIME%` variables, parsed for precise `[DD/MM/YYYY HH:MM:SS]` formatting with leading-zero correction for AM hours.
-2. **Ping Execution**: 
-   - `ping -n %PACKETS%`: Sends exactly the number of packets specified (default 1).
-   - `-w 2000`: Waits 2 seconds for a response before timing out.
-   - `>nul 2>&1`: Suppresses all command output to keep the console clean and save CPU cycles.
-3. **Conditionals**: Checks `%ERRORLEVEL%`. If `0`, the host is reachable; otherwise, a failure is logged.
-4. **Appending**: Uses `>>` to append logs. This ensures you never lose history unless you manually delete the log file.
-5. **Native Sleep**: Uses the `timeout` command which puts the process into an idle state, requiring nearly zero system interrupts.
+#### Linux/macOS (`.sh`)
+- `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"`: Sophisticated path discovery to locate the log file safely.
+- `date "+%d/%m/%Y %H:%M:%S"`: Native high-precision formatting.
+
+### The Network Check
+- `ping -n %PACKETS%` (Win) / `ping -c $PACKETS` (Unix): Only sends the minimum packet(s) needed.
+- `-w 2000` (Win) / `-W 2` (Unix): Waits exactly 2 seconds before giving up, preventing the script from hanging on a dead connection.
+- `>nul 2>&1` (Win) / `> /dev/null 2>&1` (Unix): Silences raw ping output. We handle the display manually for a cleaner, consistent UI.
+- `if %ERRORLEVEL%==0` (Win) / `if ping ...`: Checks the exit code directly. Success = 0. This is the fastest, most reliable way to verify reachability without string parsing.
+
+### The Scheduler (Idle State)
+- **Windows**: `timeout /t %INTERVAL% >nul`. The script sleeps the process entirely. While in this state, it uses 0.0% CPU.
+- **Linux/macOS**: `read -t "$INTERVAL" -n 1 -s`. This is the "magic" line—it tells Bash to wait for `$INTERVAL` seconds **OR** for a single keypress. This is how "On-Demand" pinging works without complex threading.
 
 ---
 
@@ -61,10 +73,10 @@ The script operates in a continuous cycle:
 
 | Resource | Usage                              | Why? |
 |----------|------------------------------------|------|
-| **CPU**  | < 0.1%                             | Spends 99.8% of time in `timeout` (idle state). |
-| **RAM**  | ~1.5 MB                            | Only the overhead of a standard `cmd.exe` process. |
-| **Network**| ~32 Bytes / 10 Mins               | Standard ICMP Echo Request. |
-| **Disk** | ~50 Bytes / Entry                  | Efficient plain-text appending. |
+| **CPU**  | < 0.1%                             | Spends 99.8% of time in an idle sleep state. |
+| **RAM**  | ~1.5 MB                            | Overhead of a standard `cmd.exe` or `bash` process. |
+| **Network**| ~32 Bytes / Check                 | Minimal ICMP Echo Request packets. |
+| **Disk** | ~50 Bytes / Entry                  | Direct, efficient binary-safe appending to `.log`. |
 
 ---
 
@@ -82,14 +94,19 @@ Entries in `PingWatch.log` are designed to be easily grep-able or imported into 
 
 ## 💡 Pro Tips
 
-- **Minimize to Tray**: Run the script and then minimize the window; it will continue logging without cluttering your taskbar.
-- **Multiple Targets**: Copy the script to different folders and change the `TARGET` in each one. They will each maintain their own separate log files.
-- **Startup**: Create a shortcut to the `.bat` file in your Windows Startup folder (`shell:startup`) to begin monitoring automatically when you log in.
+- **Minimize to Tray (Win)**: Run the script and minimize; it continues logging without slowing your PC.
+- **Background (Unix)**: Run as a background process with `nohup ./PingWatch.sh &`.
+- **Multiple Targets**: Copy the script into different folders. Each instance will manage its own `PingWatch.log`.
+- **Auto-Start**: 
+  - **Windows**: Place a shortcut to `.bat` in `shell:startup`.
+  - **Linux**: Add to your `.bashrc` or `crontab -e @reboot`.
+- **Windows Defender**: On Windows 11, if Defender flags the script, right-click → Properties → **Unblock**.
 
 ---
 
 ## 💻 Requirements
 
-- **OS**: Windows 7 / 8 / 10 / 11.
-- **Rights**: Standard user permissions (Administrator not required).
-- **Disk**: Minimal space for text logs.
+- **Windows**: Windows 7 / 8 / 10 / 11 (Any edition).
+- **Unix**: Linux (Any distro), macOS, or WSL.
+- **Rights**: Standard user permissions (Administrator/Root NOT required).
+- **Disk**: ~500KB for the script; log size depends on duration.
