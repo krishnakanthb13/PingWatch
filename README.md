@@ -54,6 +54,23 @@ LOG="PingWatch.log"            # Output log filename
 
 ---
 
+## 🎯 Recommended Targets
+
+If you want the most reliable monitoring without being filtered or blocked for frequent pings, consider using these high-availability public DNS addresses:
+
+| Provider | Hostname / IP | Benefit |
+|----------|---------------|---------|
+| **Google DNS** | `8.8.8.8` | Highly reliable and virtually never down. |
+| **Cloudflare** | `1.1.1.1` | Optimized for speed and handles high ICMP traffic. |
+| **Quad9** | `9.9.9.9` | High stability with security focus. |
+| **OpenDNS** | `208.67.222.222` | Enterprise-grade availability. |
+| **Google Site**| `google.com` | A solid check for actual web accessibility. |
+
+> [!TIP]
+> For best results, use IPs like `8.8.8.8` or `1.1.1.1` instead of domain names. This bypasses DNS lookups and ensures you are testing your raw internet connection.
+
+---
+
 ## 🔍 Detailed Code Documentation
 
 ### The Logging Engine
