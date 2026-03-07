@@ -35,7 +35,7 @@ set "INTERVAL=600"         :: Time between checks (in seconds)
 1. **Setup**: Place `PingWatch.bat` in a folder of your choice.
 2. **Configure**: (Optional) Edit the `TARGET` variable in the file if you want to ping something other than Google.
 3. **Launch**: Double-click `PingWatch.bat`.
-4. **Monitor**: The console will show the status, and a `PingWatch_log.txt` file will be created/updated in the same folder.
+4. **Monitor**: The console will show the status, and a `PingWatch.log` file will be created/updated in the same folder.
 5. **Stop**: To stop the process, press **Ctrl+C** in the terminal window and confirm (if prompted), or simply close the window.
 
 ---
@@ -69,7 +69,7 @@ The script operates in a continuous cycle:
 
 ## 📋 Log File Format
 
-Entries in `PingWatch_log.txt` are designed to be easily grep-able or imported into Excel:
+Entries in `PingWatch.log` are designed to be easily grep-able or imported into Excel:
 
 ```text
 [07/03/2026 13:45] SUCCESS - google.com is reachable
