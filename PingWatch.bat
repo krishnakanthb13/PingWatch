@@ -5,21 +5,24 @@
 :: ============================================================
 :: Settings
 :: ============================================================
-setlocal
+setlocal EnableDelayedExpansion
 set "TARGET=8.8.8.8"           :: Google Public DNS (Google.com)
 set "PACKETS=1"                :: Number of pings to send per check
 set "INTERVAL=600"             :: Ping interval in seconds
 set "LOG=%~dp0PingWatch.log"   :: Output log filename
 :: ============================================================
 
+:: Color codes via PowerShell helper
+:: We use PowerShell Write-Host for colored output in CMD
+
 echo.
-echo Monitoring: %TARGET% site
-echo Packets:    %PACKETS% ping(s)
-echo Interval:   %INTERVAL% second(s)
-echo Logging to: %LOG%
+call :print_yellow "Monitoring: %TARGET% site"
+call :print_yellow "Packets:    %PACKETS% ping(s)"
+call :print_yellow "Interval:   %INTERVAL% second(s)"
+call :print_yellow "Logging to: %LOG%"
 echo.
-echo Press any key to ping ON-DEMAND.
-echo Press Ctrl+C to stop this process and close.
+call :print_yellow "Press any key to ping ON-DEMAND."
+call :print_yellow "Press Ctrl+C to stop this process and close."
 echo.
 
 :LOOP
@@ -39,13 +42,28 @@ echo.
 
     if %ERRORLEVEL%==0 (
         echo [%D% %T%] SUCCESS - %TARGET% is reachable >> "%LOG%"
-        echo [%D% %T%] SUCCESS - %TARGET% is reachable
+        call :print_green "[%D% %T%] SUCCESS - %TARGET% is reachable"
     ) else (
         echo [%D% %T%] FAILURE - %TARGET% is NOT reachable >> "%LOG%"
-        echo [%D% %T%] FAILURE - %TARGET% is NOT reachable
+        call :print_red "[%D% %T%] FAILURE - %TARGET% is NOT reachable"
     )
 
     :: Wait for interval or ANY KEY to ping on-demand
     timeout /t %INTERVAL% >nul
 
 goto LOOP
+
+:: ============================================================
+:: Color helper functions using PowerShell
+:: ============================================================
+:print_yellow
+powershell -NoProfile -Command "Write-Host '%~1' -ForegroundColor Yellow"
+goto :eof
+
+:print_green
+powershell -NoProfile -Command "Write-Host '%~1' -ForegroundColor Green"
+goto :eof
+
+:print_red
+powershell -NoProfile -Command "Write-Host '%~1' -ForegroundColor Red"
+goto :eof

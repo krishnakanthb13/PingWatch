@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="pingwatch_icon.png" width="300" alt="PingWatch Logo">
+</p>
+
+---
+
 # PingWatch - Lightweight Network Monitor
 
 A hyper-minimalist network monitor for **Windows (Batch)** and **Linux/macOS (Bash)**. **PingWatch** is optimized for low-resource environments (like mobile hotspots or metered USB tethering), using native system commands to log connectivity without extra dependencies.
@@ -7,6 +13,8 @@ A hyper-minimalist network monitor for **Windows (Batch)** and **Linux/macOS (Ba
 ## 🛠️ Features
 
 - **Cross-Platform**: Full support for Windows (`.bat`) and Unix-like systems (`.sh`).
+- **Colorful Interface**: High-visibility terminal output (Yellow for info, Green for success, Red for failure).
+- **Smart OS Detection**: Automatically adjusts ping flags for Git Bash (Windows) vs. Linux/macOS environments.
 - **Zero Dependencies**: No Python, Node.js, or external tools required—just native shell magic.
 - **Set-and-Forget**: Configure your target once and let it run in the background.
 - **Resource Efficient**: Consumes ~1.5MB of RAM and effectively 0% CPU while idling.
@@ -76,9 +84,12 @@ If you want the most reliable monitoring without being filtered or blocked for f
 ### The Logging Engine
 #### Windows (`.bat`)
 - `set "LOG=%~dp0PingWatch.log"`: Uses `%~dp0` to ensure the log is always created in the script's own folder, even if run from a different directory.
+- `powershell ... Write-Host`: Uses lightweight PowerShell calls to provide a colorful UI in the standard CMD window.
 - `for /f "tokens=..." %%a in ("%TIME%")`: Parses the system time into tokens to force a leading `0` for hours before 10 AM, ensuring fixed-width log entries.
 
 #### Linux/macOS (`.sh`)
+- `if [[ "$OSTYPE" == "msys" ... ]]`: Detects if running in Git Bash on Windows to use `ping.exe` flags (`-n`, `-w`) instead of Linux flags (`-c`, `-W`).
+- `echo -e "${COLOR}..."`: Uses standard ANSI escape codes for high-performance colored output.
 - `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"`: Sophisticated path discovery to locate the log file safely.
 - `date "+%d/%m/%Y %H:%M:%S"`: Native high-precision formatting.
 
