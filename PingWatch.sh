@@ -19,6 +19,19 @@ GREEN='\033[1;32m'
 RED='\033[1;31m'
 RESET='\033[0m'
 
+# Hide the literal ^C character from terminal output
+stty -echoctl
+
+# Trap Ctrl+C (SIGINT) and EXIT to clean up terminal and exit cleanly
+cleanup_and_exit() {
+    echo ""
+    echo -e "${YELLOW}Exiting PingWatch...${RESET}"
+    stty echoctl
+    trap - SIGINT EXIT
+    exit 0
+}
+trap cleanup_and_exit SIGINT EXIT
+
 echo ""
 echo -e "${YELLOW}Monitoring: $TARGET site${RESET}"
 echo -e "${YELLOW}Packets:    $PACKETS ping(s)${RESET}"
