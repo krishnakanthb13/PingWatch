@@ -60,7 +60,13 @@ echo.
     :: Wait for interval or ANY KEY to ping on-demand
     :: We use a PowerShell one-liner to capture the pressed key and timeout
     set "KEY="
-    for /f "delims=" %%A in ('powershell -NoProfile -Command "if ([System.Console]::IsInputRedirected) { Start-Sleep -Seconds %INTERVAL% } else { $d = (Get-Date).AddSeconds(%INTERVAL%); while ((Get-Date) -lt $d) { if ([System.Console]::KeyAvailable) { [System.Console]::ReadKey($true).KeyChar; break }; Start-Sleep -Milliseconds 50 } }"') do set "KEY=%%A"
+    for /f "delims=" %%A in ('powershell -NoProfile -Command "if ([System.Console]::IsInputRedirected) { Start-Sleep -Seconds %INTERVAL% } else { [Console]::TreatControlCAsInput = $true; $d = (Get-Date).AddSeconds(%INTERVAL%); while ((Get-Date) -lt $d) { if ([System.Console]::KeyAvailable) { $k = [System.Console]::ReadKey($true); if ($k.Modifiers -band [ConsoleModifiers]::Control -and $k.Key -eq [ConsoleKey]::C) { Write-Output 'CTRL_C'; break } else { Write-Output $k.KeyChar; break } }; Start-Sleep -Milliseconds 50 } }"') do set "KEY=%%A"
+
+    if "!KEY!"=="CTRL_C" (
+        echo.
+        call :print_yellow "Exiting PingWatch..."
+        goto :eof
+    )
 
 goto LOOP
 
