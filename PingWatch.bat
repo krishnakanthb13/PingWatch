@@ -21,6 +21,7 @@ call :print_yellow "Packets:    %PACKETS% ping(s)"
 call :print_yellow "Interval:   %INTERVAL% second(s)"
 call :print_yellow "Logging to: %LOG%"
 echo.
+call :print_yellow "Hotkeys: (1) 8.8.8.8 (2) 1.1.1.1 (3) 9.9.9.9 (4) 208.67.222.222 (5) google.com"
 call :print_yellow "Press any key to ping ON-DEMAND."
 call :print_yellow "Press Ctrl+C to stop this process and close."
 echo.
@@ -37,19 +38,29 @@ echo.
     set "HH=%HH: =0%"
     set "T=%HH%:%MM%:%SS%"
 
+    :: Reset KEY and determine which target to ping
+    set "CURRENT_TARGET=%TARGET%"
+    if "%KEY%"=="1" set "CURRENT_TARGET=8.8.8.8"
+    if "%KEY%"=="2" set "CURRENT_TARGET=1.1.1.1"
+    if "%KEY%"=="3" set "CURRENT_TARGET=9.9.9.9"
+    if "%KEY%"=="4" set "CURRENT_TARGET=208.67.222.222"
+    if "%KEY%"=="5" set "CURRENT_TARGET=google.com"
+
     :: Ping using configured packet count, suppress output, check result
-    ping -n %PACKETS% -w 2000 %TARGET% >nul 2>&1
+    ping -n %PACKETS% -w 2000 %CURRENT_TARGET% >nul 2>&1
 
     if %ERRORLEVEL%==0 (
-        echo [%D% %T%] SUCCESS - %TARGET% is reachable >> "%LOG%"
-        call :print_green "[%D% %T%] SUCCESS - %TARGET% is reachable"
+        echo [%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable >> "%LOG%"
+        call :print_green "[%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable"
     ) else (
-        echo [%D% %T%] FAILURE - %TARGET% is NOT reachable >> "%LOG%"
-        call :print_red "[%D% %T%] FAILURE - %TARGET% is NOT reachable"
+        echo [%D% %T%] FAILURE - %CURRENT_TARGET% is NOT reachable >> "%LOG%"
+        call :print_red "[%D% %T%] FAILURE - %CURRENT_TARGET% is NOT reachable"
     )
 
     :: Wait for interval or ANY KEY to ping on-demand
-    timeout /t %INTERVAL% >nul
+    :: We use a PowerShell one-liner to capture the pressed key and timeout
+    set "KEY="
+    for /f "delims=" %%A in ('powershell -NoProfile -Command "if ([System.Console]::IsInputRedirected) { Start-Sleep -Seconds %INTERVAL% } else { $d = (Get-Date).AddSeconds(%INTERVAL%); while ((Get-Date) -lt $d) { if ([System.Console]::KeyAvailable) { [System.Console]::ReadKey($true).KeyChar; break }; Start-Sleep -Milliseconds 50 } }"') do set "KEY=%%A"
 
 goto LOOP
 
