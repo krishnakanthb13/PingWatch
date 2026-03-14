@@ -15,7 +15,6 @@ set "LOG=%~dp0PingWatch.log"   :: Output log filename
 :: Color codes via PowerShell helper
 :: We use PowerShell Write-Host for colored output in CMD
 
-echo.
 call :print_yellow "Monitoring: %TARGET% site"
 call :print_yellow "Packets:    %PACKETS% ping(s)"
 call :print_yellow "Interval:   %INTERVAL% second(s)"

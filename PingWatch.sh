@@ -32,7 +32,6 @@ cleanup_and_exit() {
 }
 trap cleanup_and_exit SIGINT EXIT
 
-echo ""
 echo -e "${YELLOW}Monitoring: $TARGET site${RESET}"
 echo -e "${YELLOW}Packets:    $PACKETS ping(s)${RESET}"
 echo -e "${YELLOW}Interval:   $INTERVAL second(s)${RESET}"
