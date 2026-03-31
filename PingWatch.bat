@@ -20,8 +20,9 @@ call :print_yellow "Packets:    %PACKETS% ping(s)"
 call :print_yellow "Interval:   %INTERVAL% second(s)"
 call :print_yellow "Logging to: %LOG%"
 echo.
-call :print_yellow "Hotkeys: (1) 8.8.8.8 (2) 1.1.1.1 (3) 9.9.9.9 (4) 208.67.222.222 (5) google.com"
-call :print_yellow "Press any key to ping ON-DEMAND."
+call :print_yellow "Targets: (1) 8.8.8.8 (2) 1.1.1.1 (3) 9.9.9.9 (4) 208.67.222.222 (5) google.com"
+call :print_yellow "Intervals: (F)ast 10s | (M)edium 60s | (N)ormal 600s"
+call :print_yellow "Press any other key to ping ON-DEMAND."
 call :print_yellow "Press Ctrl+C to stop this process and close."
 echo.
 
@@ -44,6 +45,9 @@ echo.
     if "%KEY%"=="3" set "CURRENT_TARGET=9.9.9.9"
     if "%KEY%"=="4" set "CURRENT_TARGET=208.67.222.222"
     if "%KEY%"=="5" set "CURRENT_TARGET=google.com"
+    if /I "%KEY%"=="F" set "INTERVAL=10"
+    if /I "%KEY%"=="M" set "INTERVAL=60"
+    if /I "%KEY%"=="N" set "INTERVAL=600"
 
     :: Ping using configured packet count, suppress output, check result
     ping -n %PACKETS% -w 2000 %CURRENT_TARGET% >nul 2>&1

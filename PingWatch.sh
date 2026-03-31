@@ -37,8 +37,9 @@ echo -e "${YELLOW}Packets:    $PACKETS ping(s)${RESET}"
 echo -e "${YELLOW}Interval:   $INTERVAL second(s)${RESET}"
 echo -e "${YELLOW}Logging to: $LOG${RESET}"
 echo ""
-echo -e "${YELLOW}Hotkeys: (1) 8.8.8.8 (2) 1.1.1.1 (3) 9.9.9.9 (4) 208.67.222.222 (5) google.com${RESET}"
-echo -e "${YELLOW}Press any key to ping ON-DEMAND.${RESET}"
+echo -e "${YELLOW}Targets: (1) 8.8.8.8 (2) 1.1.1.1 (3) 9.9.9.9 (4) 208.67.222.222 (5) google.com${RESET}"
+echo -e "${YELLOW}Intervals: (F)ast 10s | (M)edium 60s | (N)ormal 600s${RESET}"
+echo -e "${YELLOW}Press any other key to ping ON-DEMAND.${RESET}"
 echo -e "${YELLOW}Press Ctrl+C to stop this process and close.${RESET}"
 echo ""
 
@@ -53,6 +54,9 @@ while true; do
     if [[ "$KEY" == "3" ]]; then CURRENT_TARGET="9.9.9.9"; fi
     if [[ "$KEY" == "4" ]]; then CURRENT_TARGET="208.67.222.222"; fi
     if [[ "$KEY" == "5" ]]; then CURRENT_TARGET="google.com"; fi
+    if [[ "$KEY" == "f" || "$KEY" == "F" ]]; then INTERVAL=10; fi
+    if [[ "$KEY" == "m" || "$KEY" == "M" ]]; then INTERVAL=60; fi
+    if [[ "$KEY" == "n" || "$KEY" == "N" ]]; then INTERVAL=600; fi
 
     # Ping using configured packet count, suppress output
     # Auto-detect OS: Git Bash on Windows uses ping.exe (different flags)
