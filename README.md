@@ -18,7 +18,8 @@ A hyper-minimalist network monitor for **Windows (Batch)** and **Linux/macOS (Ba
 - **Zero Dependencies**: No Python, Node.js, or external tools required—just native shell magic.
 - **Set-and-Forget**: Configure your target once and let it run in the background.
 - **Resource Efficient**: Consumes ~1.5MB of RAM and effectively 0% CPU while idling.
-- **On-Demand Checking**: Press any key while the window is focused to trigger a ping immediately.
+- **Interactive Hotkeys**: Switch between 5 different targets on-the-fly (`1`-`5`) or toggle ping intervals between Fast (10s), Medium (60s), and Normal (600s).
+- **On-Demand Checking**: Press any other key while the window is focused to trigger a ping immediately.
 - **Precision Logging**: Precise timestamps `[DD/MM/YYYY HH:MM:SS]` for every entry.
 
 ---
@@ -50,15 +51,17 @@ LOG="PingWatch.log"            # Output log filename
 ### Windows
 1. **Launch**: Double-click `PingWatch.bat`.
 2. **Monitor**: The console will show status, and a `PingWatch.log` file is updated in the same folder.
-3. **On-Demand**: Press any key to trigger a ping immediately.
-4. **Stop**: Press **Ctrl+C** or close the window.
+3. **Hotkeys**: Press `1`-`5` to change targets, or `F`/`M`/`N` to change the ping interval.
+4. **On-Demand**: Press any other key to trigger a ping immediately.
+5. **Stop**: Press **Ctrl+C** or close the window.
 
 ### Linux / macOS
 1. **Permissions**: Make the script executable: `chmod +x PingWatch.sh`
 2. **Launch**: Run it from the terminal: `./PingWatch.sh`
 3. **Monitor**: Status is printed and appended to `PingWatch.log`.
-4. **On-Demand**: Press any key to trigger an instant ping.
-5. **Stop**: Press **Ctrl+C**.
+4. **Hotkeys**: Press `1`-`5` to change targets, or `f`/`m`/`n` to change the ping interval.
+5. **On-Demand**: Press any other key to trigger an instant ping.
+6. **Stop**: Press **Ctrl+C**.
 
 ---
 
@@ -79,29 +82,11 @@ If you want the most reliable monitoring without being filtered or blocked for f
 
 ---
 
-## 🔍 Detailed Code Documentation
+## 📚 Project Documentation
 
-### The Logging Engine
-#### Windows (`.bat`)
-- `set "LOG=%~dp0PingWatch.log"`: Uses `%~dp0` to ensure the log is always created in the script's own folder, even if run from a different directory.
-- `powershell ... Write-Host`: Uses lightweight PowerShell calls to provide a colorful UI in the standard CMD window.
-- `for /f "tokens=..." %%a in ("%TIME%")`: Parses the system time into tokens to force a leading `0` for hours before 10 AM, ensuring fixed-width log entries.
-
-#### Linux/macOS (`.sh`)
-- `if [[ "$OSTYPE" == "msys" ... ]]`: Detects if running in Git Bash on Windows to use `ping.exe` flags (`-n`, `-w`) instead of Linux flags (`-c`, `-W`).
-- `echo -e "${COLOR}..."`: Uses standard ANSI escape codes for high-performance colored output.
-- `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"`: Sophisticated path discovery to locate the log file safely.
-- `date "+%d/%m/%Y %H:%M:%S"`: Native high-precision formatting.
-
-### The Network Check
-- `ping -n %PACKETS%` (Win) / `ping -c $PACKETS` (Unix): Only sends the minimum packet(s) needed.
-- `-w 2000` (Win) / `-W 2` (Unix): Waits exactly 2 seconds before giving up, preventing the script from hanging on a dead connection.
-- `>nul 2>&1` (Win) / `> /dev/null 2>&1` (Unix): Silences raw ping output. We handle the display manually for a cleaner, consistent UI.
-- `if %ERRORLEVEL%==0` (Win) / `if ping ...`: Checks the exit code directly. Success = 0. This is the fastest, most reliable way to verify reachability without string parsing.
-
-### The Scheduler (Idle State)
-- **Windows**: `timeout /t %INTERVAL% >nul`. The script sleeps the process entirely. While in this state, it uses 0.0% CPU.
-- **Linux/macOS**: `read -t "$INTERVAL" -n 1 -s`. This is the "magic" line—it tells Bash to wait for `$INTERVAL` seconds **OR** for a single keypress. This is how "On-Demand" pinging works without complex threading.
+For deeper insights into the scripts, please see:
+- [CODE_DOCUMENTATION.md](CODE_DOCUMENTATION.md) - Technical details and implementation mechanisms.
+- [DESIGN_PHILOSOPHY.md](DESIGN_PHILOSOPHY.md) - Project goals, reasoning, and core ideology.
 
 ---
 
