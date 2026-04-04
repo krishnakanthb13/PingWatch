@@ -12,14 +12,16 @@ A hyper-minimalist network monitor for **Windows (Batch)** and **Linux/macOS (Ba
 
 ## 🛠️ Features
 
+- **Latency Tracking**: Automatically captures and logs network response times (ms).
+- **Locale-Agnostic**: Smart parsing (Win) works across all system languages (English, French, German, etc.).
 - **Cross-Platform**: Full support for Windows (`.bat`) and Unix-like systems (`.sh`).
 - **Colorful Interface**: High-visibility terminal output (Yellow for info, Green for success, Red for failure).
 - **Smart OS Detection**: Automatically adjusts ping flags for Git Bash (Windows) vs. Linux/macOS environments.
 - **Zero Dependencies**: No Python, Node.js, or external tools required—just native shell magic.
 - **Set-and-Forget**: Configure your target once and let it run in the background.
 - **Resource Efficient**: Consumes ~1.5MB of RAM and effectively 0% CPU while idling.
-- **Interactive Hotkeys**: Switch between 5 different targets on-the-fly (`1`-`5`) or toggle ping intervals between Fast (10s), Medium (60s), and Normal (600s).
-- **On-Demand Checking**: Press any other key while the window is focused to trigger a ping immediately.
+- **Interactive Hotkeys**: Switch between 5 different targets on-the-fly (`1`-`5`) or toggle ping intervals.
+- **On-Demand Checking**: Press any key while focused to trigger a ping immediately.
 - **Precision Logging**: Precise timestamps `[DD/MM/YYYY HH:MM:SS]` for every entry.
 
 ---
@@ -106,9 +108,9 @@ For deeper insights into the scripts, please see:
 Entries in `PingWatch.log` are designed to be easily grep-able or imported into Excel:
 
 ```text
-[07/03/2026 13:45:12] SUCCESS - google.com is reachable
-[07/03/2026 13:55:04] SUCCESS - google.com is reachable
-[07/03/2026 14:05:59] FAILURE - google.com is NOT reachable
+[07/03/2026 13:45:12] SUCCESS - 8.8.8.8 is reachable (Latency: 28ms)
+[07/03/2026 13:55:04] SUCCESS - 8.8.8.8 is reachable (Latency: 31ms)
+[07/03/2026 14:05:59] FAILURE - 8.8.8.8 is NOT reachable
 ```
 
 ---

@@ -7,8 +7,9 @@ PingWatch was conceived out of a fundamental need for reliability in constrained
 Our design philosophy is anchored in three primary tenets:
 
 1. **Absolute Minimalism**: Features should only be added if they require zero external dependencies. If a feature requires Python, Node.js, or compiled binaries, it does not belong in PingWatch.
-2. **Native Resilience**: By leveraging native OS features (Batch on Windows, Bash on Unix), PingWatch guarantees cross-compatibility out-of-the-box on almost any system manufactured in the last two decades.
+2. **Native Resilience**: By leveraging native OS features (Batch on Windows, Bash on Unix), PingWatch guarantees cross-compatibility. This includes **Locale-Agnostic Parsing**—ensuring the script behaves perfectly on systems set to English, French, Spanish, or German without code changes.
 3. **Set, Forget, or Intervene**: The tool must be invisible when you don't need it (idling at effectively 0% CPU), but instantly responsive when you do (interactive hotkeys for on-demand diagnostics).
+4. **Informational Depth**: Every byte of added logic must justify its weight. We include response-time latency not just because it's interesting, but because it's a critical diagnostic metric for identifying network jitter or tethering bottle-necks.
 
 ## Key Architectural Decisions
 

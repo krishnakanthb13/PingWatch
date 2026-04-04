@@ -5,15 +5,20 @@ This document describes the technical implementation details for the PingWatch s
 ## The Logging Engine
 
 ### Windows (`.bat`)
-- **Path Resolution**: `set "LOG=%~dp0PingWatch.log"` uses `%~dp0` to ensure the log is always created in the script's own folder, even if run from a different directory.
-- **Colored Output**: Uses lightweight `powershell -Command "Write-Host ..."` calls to provide a colorful UI in the standard CMD window without any third-party executables.
-- **Time Formatting**: `for /f "tokens=..." %%a in ("%TIME%")` parses the system time into tokens to force a leading `0` for hours before 10 AM, ensuring fixed-width, neatly-aligned log entries.
+- **Path Resolution**: `set "LOG=%~dp0PingWatch.log"` ensures the log is in the script's folder.
+- **Unique Temp Files**: `%TEMP%\ping_watch_%RANDOM%_%RANDOM%.txt` guarantees that concurrent instances (or multiple Targets) don't overwrite each other's temporary diagnostic data, even in read-only script directories.
+- **Locale-Agnostic Latency Parsing**: Instead of searching for "Average", a robust `for`-loop nested inside another `for`-loop scans for numeric tokens associated with the standard `ms` suffix. This "token-proximity" logic works regardless of the system language (English, French, German, etc.) or ping output format (`19ms` vs `19 ms`).
+- **Variable Isolation**: Loop-assigned tokens use a dedicated `TOK` variable. This prevents clobbering the global `T` variable (used for the timestamp), ensuring that high-frequency logs never show corrupted time values.
+- **Colored Output**: Uses lightweight `powershell -Command "Write-Host ..."` calls for a colorful UI in CMD.
+- **Time Formatting**: Parses `%TIME%` to force fixed-width, neatly-aligned entries.
 
 ### Linux/macOS (`.sh`)
-- **OS Detection**: `if [[ "$OSTYPE" == "msys" ... ]]` detects if the script is running in Git Bash on Windows to appropriately use `ping.exe` flags (`-n`, `-w`) instead of Linux flags (`-c`, `-W`).
-- **Colored Output**: Uses standard ANSI escape codes (`\033[...m`) for high-performance, native colored output.
-- **Path Resolution**: `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"` provides sophisticated path discovery to robustly locate the log file safely.
-- **Time Formatting**: `date "+%d/%m/%Y %H:%M:%S"` leverages native high-precision string formatting.
+- **OS Detection**: Detects Git Bash (`msys`/`cygwin`) vs. Linux/macOS to toggle `ping.exe` vs native `ping` flags.
+- **Latency Extraction**: Uses `sed -n 's/.../p'` with decimal support (`[0-9.<]`) to capture response times like `0.4ms` or `<1ms` without falling back to whole-line summaries if a match fails.
+- **POSIX Safety**: Conditionals like `[ "$RET" -eq 0 ]` use explicit double-quotes to ensure the shell receives a single token, preventing syntax crashes if a command exit code is unexpectedly empty or contains spaces.
+- **Colored Output**: High-performance ANSI escape codes (`\033[...]m`).
+- **Path Resolution**: Sophisticated path discovery via `dirname` and `pwd`.
+- **Time Formatting**: Native high-precision formatting via `date`.
 
 ## The Network Check
 
