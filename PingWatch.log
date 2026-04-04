@@ -451,3 +451,16 @@
 [03/04/2026 21:34:36] SUCCESS - google.com is reachable 
 [03/04/2026 21:34:40] SUCCESS - 8.8.8.8 is reachable 
 [04/04/2026 21:56:44] SUCCESS - 8.8.8.8 is reachable 
+[04/04/2026 22:19:10] SUCCESS - 8.8.8.8 is reachable (Latency: 29ms)
+[04/04/2026 22:19:15] SUCCESS - 1.1.1.1 is reachable (Latency: 38ms)
+[04/04/2026 22:19:16] SUCCESS - 9.9.9.9 is reachable (Latency: 94ms)
+[04/04/2026 22:19:18] SUCCESS - 208.67.222.222 is reachable (Latency: 34ms)
+[04/04/2026 22:19:20] SUCCESS - google.com is reachable (Latency: 41ms)
+[04/04/2026 22:19:23] SUCCESS - 8.8.8.8 is reachable (Latency: 16ms)
+[04/04/2026 22:26:36] SUCCESS - 8.8.8.8 is reachable (Latency: 42ms) 
+[04/04/2026 22:28:29] SUCCESS - 8.8.8.8 is reachable (Latency: 48ms) 
+[04/04/2026 22:28:32] SUCCESS - 1.1.1.1 is reachable (Latency: 20ms) 
+[04/04/2026 22:28:33] SUCCESS - 9.9.9.9 is reachable (Latency: 95ms) 
+[04/04/2026 22:28:34] SUCCESS - 208.67.222.222 is reachable (Latency: 23ms) 
+[04/04/2026 22:28:36] SUCCESS - google.com is reachable (Latency: 60ms) 
+[04/04/2026 22:28:40] SUCCESS - 8.8.8.8 is reachable (Latency: 21ms) 
