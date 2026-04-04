@@ -49,12 +49,30 @@ echo.
     if /I "%KEY%"=="M" set "INTERVAL=60"
     if /I "%KEY%"=="N" set "INTERVAL=600"
 
-    :: Ping using configured packet count, suppress output, check result
-    ping -n %PACKETS% -w 2000 %CURRENT_TARGET% >nul 2>&1
-
+    :: Ping using configured packet count, capture output to get latency
+    set "LATENCY=N/A"
+    set "STATUS=FAILURE"
+    
+    :: Capture ping output to a temporary file for parsing
+    ping -n %PACKETS% -w 2000 %CURRENT_TARGET% > ping_temp.txt 2>&1
     if %ERRORLEVEL%==0 (
-        echo [%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable >> "%LOG%"
-        call :print_green "[%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable"
+        set "STATUS=SUCCESS"
+        :: Extract Average from summary if it exists (for multiple packets)
+        for /f "tokens=6 delims== " %%i in ('findstr /C:"Average =" ping_temp.txt') do set "LATENCY=%%i"
+        :: If no Average, get the time from the first reply line
+        if "!LATENCY!"=="N/A" (
+            for /f "tokens=7 delims== " %%i in ('findstr "time=" ping_temp.txt') do set "LATENCY=%%i"
+        )
+        :: Clean up common characters (ms, commas)
+        set "LATENCY=!LATENCY:ms=!"
+        set "LATENCY=!LATENCY:,=!"
+        set "LATENCY=!LATENCY!ms"
+    )
+    del ping_temp.txt
+
+    if "%STATUS%"=="SUCCESS" (
+        echo [%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable (Latency: %LATENCY%) >> "%LOG%"
+        call :print_green "[%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable (Latency: %LATENCY%)"
     ) else (
         echo [%D% %T%] FAILURE - %CURRENT_TARGET% is NOT reachable >> "%LOG%"
         call :print_red "[%D% %T%] FAILURE - %CURRENT_TARGET% is NOT reachable"

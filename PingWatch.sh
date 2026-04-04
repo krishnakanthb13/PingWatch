@@ -58,18 +58,34 @@ while true; do
     if [[ "$KEY" == "m" || "$KEY" == "M" ]]; then INTERVAL=60; fi
     if [[ "$KEY" == "n" || "$KEY" == "N" ]]; then INTERVAL=600; fi
 
-    # Ping using configured packet count, suppress output
+    # Ping using configured packet count, capture output
     # Auto-detect OS: Git Bash on Windows uses ping.exe (different flags)
     if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OS" == "Windows_NT" ]]; then
         # Windows ping.exe: -n for count, -w for timeout (milliseconds)
-        ping -n "$PACKETS" -w 2000 "$CURRENT_TARGET" > /dev/null 2>&1
+        PING_OUT=$(ping -n "$PACKETS" -w 2000 "$CURRENT_TARGET")
+        RET=$?
+        # Extract Average from summary if it exists (for multiple packets)
+        # Using [0-9.] to support decimal if Windows ever uses it
+        LATENCY=$(echo "$PING_OUT" | grep -i "Average =" | sed 's/.*Average = \([0-9]*\)ms.*/\1/')
+        if [[ -z "$LATENCY" ]]; then
+             LATENCY=$(echo "$PING_OUT" | grep -i "time=" | head -n 1 | sed 's/.*time=\([0-9]*\)ms.*/\1/')
+        fi
     else
         # Linux/macOS ping: -c for count, -W for timeout (seconds)
-        ping -c "$PACKETS" -W 2 "$CURRENT_TARGET" > /dev/null 2>&1
+        PING_OUT=$(ping -c "$PACKETS" -W 2 "$CURRENT_TARGET")
+        RET=$?
+        # Extract avg from summary (e.g., .../22.154/...) or first time=
+        LATENCY=$(echo "$PING_OUT" | grep "avg/" | awk -F'/' '{print $5}')
+        if [[ -z "$LATENCY" ]]; then
+             LATENCY=$(echo "$PING_OUT" | grep "time=" | head -n 1 | sed 's/.*time=\([0-9]*\.[0-9]*\).*/\1/')
+        fi
     fi
-    if [ $? -eq 0 ]; then
-        echo "[$TS] SUCCESS - $CURRENT_TARGET is reachable" >> "$LOG"
-        echo -e "${GREEN}[$TS] SUCCESS - $CURRENT_TARGET is reachable${RESET}"
+
+    if [ $RET -eq 0 ]; then
+        # Append "ms" if we got a value
+        [[ -n "$LATENCY" ]] && LATENCY_STR=" (Latency: ${LATENCY}ms)" || LATENCY_STR=""
+        echo "[$TS] SUCCESS - $CURRENT_TARGET is reachable$LATENCY_STR" >> "$LOG"
+        echo -e "${GREEN}[$TS] SUCCESS - $CURRENT_TARGET is reachable$LATENCY_STR${RESET}"
     else
         echo "[$TS] FAILURE - $CURRENT_TARGET is NOT reachable" >> "$LOG"
         echo -e "${RED}[$TS] FAILURE - $CURRENT_TARGET is NOT reachable${RESET}"
