@@ -65,10 +65,11 @@ while true; do
         PING_OUT=$(ping -n "$PACKETS" -w 2000 "$CURRENT_TARGET")
         RET=$?
         # Extract Average from summary if it exists (for multiple packets)
-        # Using [0-9.] to support decimal if Windows ever uses it
-        LATENCY=$(echo "$PING_OUT" | grep -i "Average =" | sed 's/.*Average = \([0-9]*\)ms.*/\1/')
+        # -n + /p: only print when pattern matches (no whole-line fallback)
+        # Capture group allows digits, dot, and '<' to handle "<1ms" or decimal forms
+        LATENCY=$(echo "$PING_OUT" | grep -i "Average =" | sed -n 's/.*Average = \([0-9.<][0-9.<]*\)ms.*/\1/p')
         if [[ -z "$LATENCY" ]]; then
-             LATENCY=$(echo "$PING_OUT" | grep -i "time=" | head -n 1 | sed 's/.*time=\([0-9]*\)ms.*/\1/')
+             LATENCY=$(echo "$PING_OUT" | grep -i "time=" | head -n 1 | sed -n 's/.*time=\([0-9.<][0-9.<]*\)ms.*/\1/p')
         fi
     else
         # Linux/macOS ping: -c for count, -W for timeout (seconds)
@@ -77,11 +78,11 @@ while true; do
         # Extract avg from summary (e.g., .../22.154/...) or first time=
         LATENCY=$(echo "$PING_OUT" | grep "avg/" | awk -F'/' '{print $5}')
         if [[ -z "$LATENCY" ]]; then
-             LATENCY=$(echo "$PING_OUT" | grep "time=" | head -n 1 | sed 's/.*time=\([0-9]*\.[0-9]*\).*/\1/')
+             LATENCY=$(echo "$PING_OUT" | grep "time=" | head -n 1 | sed -n 's/.*time=\([0-9.<][0-9.<]*\).*/\1/p')
         fi
     fi
 
-    if [ $RET -eq 0 ]; then
+    if [ "$RET" -eq 0 ]; then
         # Append "ms" if we got a value
         [[ -n "$LATENCY" ]] && LATENCY_STR=" (Latency: ${LATENCY}ms)" || LATENCY_STR=""
         echo "[$TS] SUCCESS - $CURRENT_TARGET is reachable$LATENCY_STR" >> "$LOG"

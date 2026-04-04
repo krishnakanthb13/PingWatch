@@ -49,30 +49,46 @@ echo.
     if /I "%KEY%"=="M" set "INTERVAL=60"
     if /I "%KEY%"=="N" set "INTERVAL=600"
 
-    :: Ping using configured packet count, capture output to get latency
+    :: Capture ping output to a unique temporary file to avoid concurrency and CWD issues
+    set "TEMP_OUT=%TEMP%\ping_watch_%RANDOM%_%RANDOM%.txt"
     set "LATENCY=N/A"
     set "STATUS=FAILURE"
     
-    :: Capture ping output to a temporary file for parsing
-    ping -n %PACKETS% -w 2000 %CURRENT_TARGET% > ping_temp.txt 2>&1
+    ping -n %PACKETS% -w 2000 %CURRENT_TARGET% > "%TEMP_OUT%" 2>&1
     if %ERRORLEVEL%==0 (
         set "STATUS=SUCCESS"
-        :: Extract Average from summary if it exists (for multiple packets)
-        for /f "tokens=6 delims== " %%i in ('findstr /C:"Average =" ping_temp.txt') do set "LATENCY=%%i"
-        :: If no Average, get the time from the first reply line
-        if "!LATENCY!"=="N/A" (
-            for /f "tokens=7 delims== " %%i in ('findstr "time=" ping_temp.txt') do set "LATENCY=%%i"
+        set "LAST_NUM="
+        :: Extract numeric latency values in a locale-agnostic way (handles "time=", "temps=", "Zeit=", etc.)
+        for /f "tokens=*" %%L in ('findstr /R "[0-9][0-9]*ms" "%TEMP_OUT%"') do (
+            for /f "tokens=1-15 delims==, " %%a in ("%%L") do (
+                for %%v in (%%a %%b %%c %%d %%e %%f %%g %%h %%i %%j %%k %%l %%m %%n %%o) do (
+                    set "TOK=%%v"
+                    set "CLEAN=!TOK:ms=!"
+                    if "!CLEAN!" neq "!TOK!" (
+                        :: We hit 'ms'. If 'CLEAN' is empty, the number was a separate token (e.g. "19 ms")
+                        if "!CLEAN!"=="" (
+                            if defined LAST_NUM set "LATENCY=!LAST_NUM!"
+                        ) else (
+                            set "LATENCY=!CLEAN!"
+                        )
+                    ) else (
+                        :: Store potential numeric strings to associate with 'ms' if it follows as a separate token
+                        set "W=!TOK!"
+                        for /f "delims=0123456789" %%x in ("!TOK!") do set "W=NO"
+                        if "!W!" neq "NO" if not "!TOK!"=="" set "LAST_NUM=!TOK!"
+                    )
+                )
+            )
         )
-        :: Clean up common characters (ms, commas)
-        set "LATENCY=!LATENCY:ms=!"
-        set "LATENCY=!LATENCY:,=!"
-        set "LATENCY=!LATENCY!ms"
+        :: Cleanup and format the final result
+        if "!LATENCY!"=="N/A" ( set "STATUS=FAILURE" ) else ( set "LATENCY=!LATENCY!ms" )
     )
-    del ping_temp.txt
+    if exist "%TEMP_OUT%" del "%TEMP_OUT%"
 
     if "%STATUS%"=="SUCCESS" (
-        echo [%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable (Latency: %LATENCY%) >> "%LOG%"
-        call :print_green "[%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable (Latency: %LATENCY%)"
+        set "PMSG=[%D% %T%] SUCCESS - %CURRENT_TARGET% is reachable (Latency: %LATENCY%)"
+        echo !PMSG! >> "%LOG%"
+        call :print_green "!PMSG!"
     ) else (
         echo [%D% %T%] FAILURE - %CURRENT_TARGET% is NOT reachable >> "%LOG%"
         call :print_red "[%D% %T%] FAILURE - %CURRENT_TARGET% is NOT reachable"
