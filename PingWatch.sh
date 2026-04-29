@@ -5,7 +5,35 @@
 # ============================================================
 # Settings
 # ============================================================
-TARGET="8.8.8.8"               # Google Public DNS (Google.com)
+# Auto-detect IP Protocol Capability
+HAS_IPV4=0
+HAS_IPV6=0
+
+if [[ "$OS" == "Windows_NT" ]]; then
+    HAS_IPV4=$(powershell.exe -NoProfile -Command "if (Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue) { Write-Output 1 } else { Write-Output 0 }" | tr -d '\r')
+    HAS_IPV6=$(powershell.exe -NoProfile -Command "if (Get-NetRoute -DestinationPrefix '::/0' -ErrorAction SilentlyContinue) { Write-Output 1 } else { Write-Output 0 }" | tr -d '\r')
+else
+    ip route show default 2>/dev/null | grep -q "^default" && HAS_IPV4=1
+    ip -6 route show default 2>/dev/null | grep -q "^default" && HAS_IPV6=1
+fi
+
+# Define Targets dynamically
+T1="8.8.8.8"
+T2="1.1.1.1"
+T3="9.9.9.9"
+T4="208.67.222.222"
+T5="google.com"
+
+if [[ "$HAS_IPV4" == "0" && "$HAS_IPV6" == "1" ]]; then
+    T1="2001:4860:4860::8888"
+    T2="2606:4700:4700::1111"
+    T3="2620:fe::fe"
+    T4="2620:0:ccc::2"
+fi
+
+TARGET="$T1"
+if [[ "$HAS_IPV4" == "0" && "$HAS_IPV6" == "1" ]]; then TARGET="$T5"; fi
+
 PACKETS=1                      # Number of pings to send per check
 INTERVAL=600                   # Ping interval in seconds
 # Get current directory of the script
@@ -32,12 +60,22 @@ cleanup_and_exit() {
 }
 trap cleanup_and_exit SIGINT EXIT
 
+if [[ "$HAS_IPV4" == "0" && "$HAS_IPV6" == "1" ]]; then
+    echo -e "${YELLOW}Network: IPv6-Only detected. Using IPv6 Targets.${RESET}"
+elif [[ "$HAS_IPV6" == "0" && "$HAS_IPV4" == "1" ]]; then
+    echo -e "${YELLOW}Network: IPv4-Only detected.${RESET}"
+elif [[ "$HAS_IPV4" == "1" && "$HAS_IPV6" == "1" ]]; then
+    echo -e "${YELLOW}Network: Dual-Stack (IPv4 + IPv6) detected.${RESET}"
+else
+    echo -e "${YELLOW}Network: No active internet gateway detected.${RESET}"
+fi
+
 echo -e "${YELLOW}Monitoring: $TARGET site${RESET}"
 echo -e "${YELLOW}Packets:    $PACKETS ping(s)${RESET}"
 echo -e "${YELLOW}Interval:   $INTERVAL second(s)${RESET}"
 echo -e "${YELLOW}Logging to: $LOG${RESET}"
 echo ""
-echo -e "${YELLOW}Targets: (1) 8.8.8.8 (2) 1.1.1.1 (3) 9.9.9.9 (4) 208.67.222.222 (5) google.com${RESET}"
+echo -e "${YELLOW}Targets: (1) $T1 (2) $T2 (3) $T3 (4) $T4 (5) $T5${RESET}"
 echo -e "${YELLOW}Intervals: (F)ast 10s | (M)edium 60s | (N)ormal 600s${RESET}"
 echo -e "${YELLOW}Press any other key to ping ON-DEMAND.${RESET}"
 echo -e "${YELLOW}Press Ctrl+C to stop this process and close.${RESET}"
@@ -49,11 +87,11 @@ while true; do
 
     # Determine which target to ping based on keypress
     CURRENT_TARGET="$TARGET"
-    if [[ "$KEY" == "1" ]]; then CURRENT_TARGET="8.8.8.8"; fi
-    if [[ "$KEY" == "2" ]]; then CURRENT_TARGET="1.1.1.1"; fi
-    if [[ "$KEY" == "3" ]]; then CURRENT_TARGET="9.9.9.9"; fi
-    if [[ "$KEY" == "4" ]]; then CURRENT_TARGET="208.67.222.222"; fi
-    if [[ "$KEY" == "5" ]]; then CURRENT_TARGET="google.com"; fi
+    if [[ "$KEY" == "1" ]]; then CURRENT_TARGET="$T1"; fi
+    if [[ "$KEY" == "2" ]]; then CURRENT_TARGET="$T2"; fi
+    if [[ "$KEY" == "3" ]]; then CURRENT_TARGET="$T3"; fi
+    if [[ "$KEY" == "4" ]]; then CURRENT_TARGET="$T4"; fi
+    if [[ "$KEY" == "5" ]]; then CURRENT_TARGET="$T5"; fi
     if [[ "$KEY" == "f" || "$KEY" == "F" ]]; then INTERVAL=10; fi
     if [[ "$KEY" == "m" || "$KEY" == "M" ]]; then INTERVAL=60; fi
     if [[ "$KEY" == "n" || "$KEY" == "N" ]]; then INTERVAL=600; fi

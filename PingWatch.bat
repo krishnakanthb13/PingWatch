@@ -6,7 +6,30 @@
 :: Settings
 :: ============================================================
 setlocal EnableDelayedExpansion
-set "TARGET=8.8.8.8"           :: Google Public DNS (Google.com)
+
+:: Auto-detect IP Protocol Capability
+set "HAS_IPV4=0"
+set "HAS_IPV6=0"
+for /f "tokens=*" %%A in ('powershell -NoProfile -Command "if (Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue) { Write-Output 1 } else { Write-Output 0 }"') do set "HAS_IPV4=%%A"
+for /f "tokens=*" %%A in ('powershell -NoProfile -Command "if (Get-NetRoute -DestinationPrefix '::/0' -ErrorAction SilentlyContinue) { Write-Output 1 } else { Write-Output 0 }"') do set "HAS_IPV6=%%A"
+
+:: Define Targets dynamically
+set "T1=8.8.8.8"
+set "T2=1.1.1.1"
+set "T3=9.9.9.9"
+set "T4=208.67.222.222"
+set "T5=google.com"
+
+if "%HAS_IPV4%"=="0" if "%HAS_IPV6%"=="1" (
+    set "T1=2001:4860:4860::8888"
+    set "T2=2606:4700:4700::1111"
+    set "T3=2620:fe::fe"
+    set "T4=2620:0:ccc::2"
+)
+
+set "TARGET=%T1%"
+if "%HAS_IPV4%"=="0" if "%HAS_IPV6%"=="1" set "TARGET=%T5%"
+
 set "PACKETS=1"                :: Number of pings to send per check
 set "INTERVAL=600"             :: Ping interval in seconds
 set "LOG=%~dp0PingWatch.log"   :: Output log filename
@@ -15,12 +38,22 @@ set "LOG=%~dp0PingWatch.log"   :: Output log filename
 :: Color codes via PowerShell helper
 :: We use PowerShell Write-Host for colored output in CMD
 
+if "%HAS_IPV4%"=="0" if "%HAS_IPV6%"=="1" (
+    call :print_yellow "Network: IPv6-Only detected. Using IPv6 Targets."
+) else if "%HAS_IPV6%"=="0" if "%HAS_IPV4%"=="1" (
+    call :print_yellow "Network: IPv4-Only detected."
+) else if "%HAS_IPV4%"=="1" if "%HAS_IPV6%"=="1" (
+    call :print_yellow "Network: Dual-Stack (IPv4 + IPv6) detected."
+) else (
+    call :print_yellow "Network: No active internet gateway detected."
+)
+
 call :print_yellow "Monitoring: %TARGET% site"
 call :print_yellow "Packets:    %PACKETS% ping(s)"
 call :print_yellow "Interval:   %INTERVAL% second(s)"
 call :print_yellow "Logging to: %LOG%"
 echo.
-call :print_yellow "Targets: (1) 8.8.8.8 (2) 1.1.1.1 (3) 9.9.9.9 (4) 208.67.222.222 (5) google.com"
+call :print_yellow "Targets: (1) %T1% (2) %T2% (3) %T3% (4) %T4% (5) %T5%"
 call :print_yellow "Intervals: (F)ast 10s | (M)edium 60s | (N)ormal 600s"
 call :print_yellow "Press any other key to ping ON-DEMAND."
 call :print_yellow "Press Ctrl+C to stop this process and close."
@@ -40,11 +73,11 @@ echo.
 
     :: Reset KEY and determine which target to ping
     set "CURRENT_TARGET=%TARGET%"
-    if "%KEY%"=="1" set "CURRENT_TARGET=8.8.8.8"
-    if "%KEY%"=="2" set "CURRENT_TARGET=1.1.1.1"
-    if "%KEY%"=="3" set "CURRENT_TARGET=9.9.9.9"
-    if "%KEY%"=="4" set "CURRENT_TARGET=208.67.222.222"
-    if "%KEY%"=="5" set "CURRENT_TARGET=google.com"
+    if "%KEY%"=="1" set "CURRENT_TARGET=%T1%"
+    if "%KEY%"=="2" set "CURRENT_TARGET=%T2%"
+    if "%KEY%"=="3" set "CURRENT_TARGET=%T3%"
+    if "%KEY%"=="4" set "CURRENT_TARGET=%T4%"
+    if "%KEY%"=="5" set "CURRENT_TARGET=%T5%"
     if /I "%KEY%"=="F" set "INTERVAL=10"
     if /I "%KEY%"=="M" set "INTERVAL=60"
     if /I "%KEY%"=="N" set "INTERVAL=600"
